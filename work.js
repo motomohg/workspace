@@ -58,5 +58,5 @@ app.get('/',function(req,res){
 });
 app.listen(process.env.VCAP_APP_PORT);
 // app.listen('3030', function(){
-	// console.log('running on 3000...');
+	// console.log('running on 3000..');
 // });
