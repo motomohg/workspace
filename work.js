@@ -3,12 +3,13 @@ var app = express();
 var bodyParser = require('body-parser');
 var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
-var xlsxtojson = require("xlsx-to-json-lc");
+var xlsxtojson = require("xlsx_buffer_json");
 app.use(bodyParser.json());
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage }).single('file');
 var pg = require('pg');
-   
+var connectionString = process.env.DATABASE_URL;
+var client = new pg.Client(connectionString);
 /** API path that will upload the files */
 app.post('/upload', function(req, res) {
 	var exceltojson;
@@ -43,16 +44,50 @@ app.post('/upload', function(req, res) {
 				if(err) {
 					return res.json({error_code:1,err_desc:err, data: null});
 				} 
-				for(var i=0;i<result.length;i++){
-					 console.log(result[i].lname);
-				}
-				res.json({error_code:0,err_desc:null, data: result});
+				// for(var i=0;i<result.length;i++){
+					 // console.log(result[i].lname);
+				// }
+				updatePg(result,res);
+				// res.json({error_code:0,err_desc:null, data: result});
 			});
 		} catch (e){
 			res.json({error_code:1,err_desc:"Corupted excel file"});
 		}
 	})
 }); 
+
+function updatePg(input,res){
+var results = [];
+	pg.connect(connectionString, function(err, client, done){
+			// // Handle connection errors
+			if(err) {
+				done();
+				console.log(err);
+				res.status(500).json({success: false, data: err});
+			}
+			
+			// SQL Query > Insert Data
+			for(var i=0;i<input.length;i++){
+				//console.log(input[i].lname,input[i].fname);
+				client.query('INSERT INTO table1(col1, col2) values($1, $2)',[input[i].lname,input[i].fname]);
+				break;
+			}
+			
+			// SQL Query > Select Data
+			const query = client.query('SELECT * FROM table1');
+			// Stream results back one row at a time
+			query.on('row',function(row){
+				results.push(row);
+			});
+			// After all data is returned, close connection and return results
+			query.on('end', function(){
+				done();
+				res.end(JSON.stringify(results));
+			});
+		});
+
+}
+
 app.get('/',function(req,res){
 	res.sendFile(__dirname + "/index.html");
 });
