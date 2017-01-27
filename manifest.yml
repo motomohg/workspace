@@ -1,0 +1,9 @@
+---
+applications:
+- name: mohg-nodejs
+  memory: 128M
+  buildpack: nodejs_buildpack
+  command:  node work.js
+  services:
+    - mohg_postgres
+    
