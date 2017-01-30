@@ -13,6 +13,7 @@
 		"multer": "~1.1.0",
 		"xls-to-json-lc": "~0.3.3",
     	"xlsx_buffer_json": "~1.0.0",
-    	"body-parser" : "~1.15.2"
+    	"body-parser" : "~1.15.2",
+    	"json2xls" : "~0.1.2"
 	}
 }
