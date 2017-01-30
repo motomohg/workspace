@@ -4,7 +4,9 @@ var bodyParser = require('body-parser');
 var multer = require('multer');
 var xlstojson = require("xls-to-json-lc");
 var xlsxtojson = require("xlsx_buffer_json");
+var json2xls = require("json2xls");
 app.use(bodyParser.json());
+app.use(json2xls.middleware);
 var storage = multer.memoryStorage();
 var upload = multer({ storage: storage }).single('file');
 var pg = require('pg');
@@ -88,10 +90,64 @@ var results = [];
 
 }
 
+
+app.get('/userDetails',function(req,res){
+	getUserDetails(res);
+});
+
+app.get('/xlsx',function(req,res){
+	var jsonArr = [{
+		"tableid" : "60",
+		"col1" : "Velusamy",
+		"col2" : "Mohan"
+	}, {
+		"tableid" : "61",
+		"col1" : "Sharma",
+		"col2" : "Raushan"
+	}, {
+		"tableid" : "62",
+		"col1" : "Witt",
+		"col2" : "Mike"
+	}
+];
+	 res.xls('data.xlsx', jsonArr);
+});
+
+function getUserDetails(res){
+	var results = [];
+	pg.connect(connectionString, function(err, client, done){
+			// // Handle connection errors
+			if(err) {
+				done();
+				console.log(err);
+				res.status(500).json({success: false, data: err});
+			}
+			
+			// SQL Query > Select Data
+			const query = client.query('SELECT * FROM table1');
+			// Stream results back one row at a time
+			query.on('row',function(row){
+				results.push(row);
+			});
+			// After all data is returned, close connection and return results
+			query.on('end', function(){
+				done();
+			//	res.end(JSON.stringify(results));
+				 res.xls('data.xlsx', results);
+			});
+	});
+
+}
+
+
 app.get('/',function(req,res){
 	res.sendFile(__dirname + "/index.html");
 });
+
+
+
+
 app.listen(process.env.VCAP_APP_PORT);
-// app.listen('3030', function(){
-	// console.log('running on 3000..');
-// });
+/* app.listen('3000', function(){
+	 console.log('running on 3000..');
+ });*/
